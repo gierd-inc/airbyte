@@ -11,7 +11,49 @@ import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.utils import AirbyteTracedException
 from airbyte_protocol.models import FailureType
-from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, RestockInventoryReports
+from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, RestockInventoryReports, ListTransactions
+
+list_transactions_data = {
+    "transactions": [
+        {
+            "sellingPartnerMetadata": {
+                "sellingPartnerId": "A2EXAMPLE",
+                "accountType": "Seller",
+                "marketplaceId": "ATVPDKIKX0DER"
+            },
+            "relatedIdentifiers": [
+                {
+                    "relatedIdentifierName": "ORDER_ID",
+                    "relatedIdentifierValue": "123-1234567-1234567"
+                }
+            ],
+            "transactionType": "Shipment",
+            "transactionId": "amzn1.transaction.txid.A2EXAMPLE.XXXXXXX",
+            "transactionStatus": "Released",
+            "description": "Transaction description",
+            "postedDate": "2023-01-01T00:00:00Z",
+            "totalAmount": {
+                "currencyCode": "USD",
+                "currencyAmount": 100.00
+            },
+            "marketplaceDetails": {
+                "marketplaceId": "ATVPDKIKX0DER",
+                "marketplaceName": "Amazon.com"
+            },
+            "items": [
+                {
+                    "description": "Item description",
+                    "totalAmount": {
+                        "currencyCode": "USD",
+                        "currencyAmount": 100.00
+                    }
+                }
+            ]
+        }
+    ],
+    "nextToken": "next_token_value"
+}
+
 
 list_financial_event_groups_data = {
     "payload": {
@@ -247,3 +289,83 @@ def test_financial_events_stream_backoff_time(list_financial_events_stream, resp
     response_mock = mock.MagicMock()
     response_mock.headers = response_headers
     assert stream.backoff_time(response_mock) == expected_backoff_time
+
+
+
+
+@pytest.fixture
+def list_transactions_stream():
+    def _internal(start_date: str = "2023-01-01T00:00:00Z", end_date: str = "2023-01-31T23:59:59Z"):
+        return ListTransactions(
+            url_base="https://test.url",
+            replication_start_date=start_date,
+            replication_end_date=end_date,
+            marketplace_id="ATVPDKIKX0DER",
+            authenticator=None,
+            period_in_days=30,
+            report_options=None,
+        )
+    return _internal
+
+def test_list_transactions_stream_path(list_transactions_stream):
+    stream = list_transactions_stream()
+    assert stream.path() == "finances/2024-06-19/transactions"
+
+def test_list_transactions_stream_primary_key(list_transactions_stream):
+    stream = list_transactions_stream()
+    assert stream.primary_key == "transactionId"
+
+def test_list_transactions_stream_cursor_field(list_transactions_stream):
+    stream = list_transactions_stream()
+    assert stream.cursor_field == "postedDate"
+
+def test_list_transactions_stream_request_params(list_transactions_stream):
+    stream = list_transactions_stream()
+    params = stream.request_params({})
+    assert "postedAfter" in params
+    assert "postedBefore" in params
+    assert "MaxResultsPerPage" in params
+    assert "marketplaceId" in params
+    assert params["marketplaceId"] == "ATVPDKIKX0DER"
+
+def test_list_transactions_stream_parse_response(list_transactions_stream, mocker):
+    stream = list_transactions_stream()
+    response = requests.Response()
+    mocker.patch.object(response, "json", return_value=list_transactions_data)
+
+    parsed_records = list(stream.parse_response(response))
+    assert len(parsed_records) == 1
+    assert parsed_records[0]["transactionId"] == "amzn1.transaction.txid.A2EXAMPLE.XXXXXXX"
+    assert parsed_records[0]["transactionType"] == "Shipment"
+    assert parsed_records[0]["postedDate"] == "2023-01-01T00:00:00Z"
+
+def test_list_transactions_stream_next_page_token(list_transactions_stream, mocker):
+    stream = list_transactions_stream()
+    response = requests.Response()
+    mocker.patch.object(response, "json", return_value=list_transactions_data)
+
+    next_page_token = stream.next_page_token(response)
+    assert next_page_token == {"nextToken": "next_token_value"}
+
+def test_list_transactions_stream_request_params_with_next_page_token(list_transactions_stream):
+    stream = list_transactions_stream()
+    next_page_token = {"nextToken": "next_token_value"}
+    params = stream.request_params({}, next_page_token)
+    assert params == {"nextToken": "next_token_value"}
+
+@pytest.mark.parametrize(
+    ("response_headers", "expected_backoff_time"),
+    (({"x-amzn-RateLimit-Limit": "2"}, 0.5), ({}, 60)),
+)
+def test_list_transactions_stream_backoff_time(list_transactions_stream, mocker, response_headers, expected_backoff_time):
+    stream = list_transactions_stream()
+    response_mock = mocker.MagicMock()
+    response_mock.headers = response_headers
+    assert stream.backoff_time(response_mock) == expected_backoff_time
+
+def test_list_transactions_stream_read_records(list_transactions_stream, mocker):
+    stream = list_transactions_stream()
+    mocker.patch.object(stream, "read_records", return_value=iter([{"transactionId": "test_id"}]))
+    records = list(stream.read_records(sync_mode=SyncMode.full_refresh))
+    assert len(records) == 1
+    assert records[0]["transactionId"] == "test_id"
