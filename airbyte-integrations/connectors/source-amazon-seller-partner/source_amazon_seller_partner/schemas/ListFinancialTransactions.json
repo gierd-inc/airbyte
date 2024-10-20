@@ -1,8 +1,8 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "ListTransactions",
+    "title": "List Financial Transactions",
     "description": "List of Transactions",
-    "type": "object",
+    "type": ["null", "object"],
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "properties": {
       "transactions": {
         "description": "A list of transactions within the specified time period.",

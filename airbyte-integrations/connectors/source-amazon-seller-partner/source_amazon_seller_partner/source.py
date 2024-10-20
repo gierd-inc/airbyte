@@ -70,7 +70,7 @@ from source_amazon_seller_partner.streams import (
     VendorSalesReports,
     VendorTrafficReport,
     XmlAllOrdersDataByOrderDataGeneral,
-    ListTransactions
+    ListFinancialTransactions
 )
 from source_amazon_seller_partner.utils import AmazonConfigException
 
@@ -200,7 +200,7 @@ class SourceAmazonSellerPartner(AbstractSource):
             VendorOrders,
             VendorForecastingFreshReport,
             VendorForecastingRetailReport,
-            ListTransactions
+            ListFinancialTransactions
         ]
 
         # TODO: Remove after Brand Analytics will be enabled in CLOUD: https://github.com/airbytehq/airbyte/issues/32353
