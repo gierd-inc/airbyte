@@ -1526,7 +1526,7 @@ class ListFinancialTransactions(FinanceStream):
     """
 
     name = "FinanceTransactions"
-    primary_key='FinanceTransactionID'
+    primary_key=None
     replication_start_date_field = "postedAfter"
     replication_end_date_field = "postedBefore"
     cursor_field = "postedDate"
@@ -1541,7 +1541,10 @@ class ListFinancialTransactions(FinanceStream):
         stream_slice: Mapping[str, Any] = None,
         **kwargs: Any,
     ) -> Iterable[Mapping]:
-        yield from response.json().get(self.data_field, {}).get("FinanceTransactions", [])
+        params = self.request_params(stream_state)
+        transactions = response.json().get(self.data_field, {}).get("Transactions", {})
+        transactions[self.replication_end_date_field] = params.get(self.replication_end_date_field)
+        yield from [transactions]
 
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):

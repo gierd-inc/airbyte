@@ -11,7 +11,7 @@ import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.utils import AirbyteTracedException
 from airbyte_protocol.models import FailureType
-from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, RestockInventoryReports, ListTransactions
+from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, RestockInventoryReports, ListFinancialTransactions
 
 list_transactions_data = {
     "transactions": [
@@ -296,7 +296,7 @@ def test_financial_events_stream_backoff_time(list_financial_events_stream, resp
 @pytest.fixture
 def list_transactions_stream():
     def _internal(start_date: str = "2023-01-01T00:00:00Z", end_date: str = "2023-01-31T23:59:59Z"):
-        return ListTransactions(
+        return ListFinancialTransactions(
             url_base="https://test.url",
             replication_start_date=start_date,
             replication_end_date=end_date,
