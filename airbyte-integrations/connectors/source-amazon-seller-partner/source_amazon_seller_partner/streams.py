@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
+
 import csv
 import gzip
 import json
@@ -34,6 +35,7 @@ ORDERS_API_VERSION = "v0"
 VENDORS_API_VERSION = "v1"
 FINANCES_API_VERSION = "v0"
 VENDOR_ORDERS_API_VERSION = "v1"
+FINACES_TRANSACTION_API_VERSION = "v2024-06-19"
 
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 DATE_FORMAT = "%Y-%m-%d"
@@ -1517,6 +1519,53 @@ class ListFinancialEvents(FinanceStream):
         events = response.json().get(self.data_field, {}).get("FinancialEvents", {})
         events[self.replication_end_date_field] = params.get(self.replication_end_date_field)
         yield from [events]
+
+
+class ListTransactions(FinanceStream):
+    """
+    API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#listransactions
+    """
+
+    name = "ListTransactions"
+    replication_start_date_field = "postedAfter"
+    replication_end_date_field = "postedBefore"
+    cursor_field = "postedBefore"
+    data_field = "payload"
+    primary_key = "transactionId"
+
+    def path(self, **kwargs) -> str:
+        return f"finances/{FINANCES_API_VERSION}/transactions"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state, stream_slice, next_page_token)
+
+        
+       # Add marketplaceId if provided in stream_slice
+        if stream_slice and "marketplaceId" in stream_slice:
+            params["marketplaceId"] = stream_slice["marketplaceId"]
+
+        # Add nextToken for pagination if available
+        if next_page_token:
+            params["nextToken"] = next_page_token["nextToken"]
+
+        return params
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping]:
+        data = response.json().get(self.data_field, {})
+        transactions = data.get("transactions", [])
+        for transaction in transactions:
+            yield transaction
 
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):

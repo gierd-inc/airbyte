@@ -139,3 +139,5 @@ def test_transform_settlement_reports(report_init_kwargs, input_data, expected_d
     schema = stream.get_json_schema()
     transformer.transform(input_data, schema)
     assert input_data == expected_data
+
+
