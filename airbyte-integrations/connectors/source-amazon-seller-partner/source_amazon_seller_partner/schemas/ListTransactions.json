@@ -1,52 +1,49 @@
 {
   "title": "ListTransactions",
-  "description": "List of Financial Transactions",
-  "type": ["object"],
+  "description": "Response schema for the Amazon Selling Partner API Finances listTransactions operation",
+  "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
     "nextToken": {
-      "description": "Token for pagination of results",
-      "type": ["null", "string"]
+      "type": ["null", "string"],
+      "description": "Token for retrieving the next page of results. Null if there are no more results."
     },
     "transactions": {
+      "type": "array",
       "description": "List of transactions within the specified time period",
-      "type": ["array"],
       "items": {
-        "type": ["object"],
+        "type": "object",
         "properties": {
           "sellingPartnerMetadata": {
+            "type": "object",
             "description": "Metadata that describes the seller",
-            "type": ["object"],
             "properties": {
               "sellingPartnerId": {
-                "description": "A unique seller identifier",
-                "type": ["string"]
+                "type": "string",
+                "description": "A unique seller identifier"
               },
               "accountType": {
-                "description": "The type of account in the transaction",
-                "type": ["string"]
+                "type": "string",
+                "description": "The type of account in the transaction"
               },
               "marketplaceId": {
-                "description": "The identifier of the marketplace where the transaction occurred",
-                "type": ["string"]
+                "type": "string",
+                "description": "The identifier of the marketplace where the transaction occurred"
               }
-            },
-            "required": ["sellingPartnerId", "marketplaceId", "accountType"]
+            }
           },
           "relatedIdentifiers": {
-            "description": "Related business identifiers of the transaction",
-            "type": ["array"],
+            "type": "array",
+            "description": "Identifiers related to the transaction",
             "items": {
-              "type": ["object"],
+              "type": "object",
               "properties": {
                 "relatedIdentifierName": {
-                  "description": "An enumerated set of related business identifier names",
-                  "type": ["string"],
+                  "type": "string",
                   "enum": [
                     "ORDER_ID",
                     "SHIPMENT_ID",
                     "EVENT_GROUP_ID",
-                    "FINANCIAL_EVENT_GROUP_ID",
                     "REFUND_ID",
                     "INVOICE_ID",
                     "DISBURSEMENT_ID",
@@ -55,269 +52,111 @@
                   ]
                 },
                 "relatedIdentifierValue": {
-                  "description": "Corresponding value of RelatedIdentifierName",
-                  "type": ["string"]
+                  "type": "string"
                 }
-              },
-              "required": ["relatedIdentifierName", "relatedIdentifierValue"]
+              }
             }
           },
           "transactionType": {
-            "description": "The type of transaction",
-            "type": ["string"]
+            "type": "string",
+            "description": "The type of transaction"
           },
           "transactionId": {
-            "description": "The unique identifier of the transaction",
-            "type": ["string"]
+            "type": ["null", "string"],
+            "description": "The unique identifier of the transaction"
           },
           "transactionStatus": {
-            "description": "The status of the transaction",
-            "type": ["null", "string"],
-            "enum": ["Deferred", "Released", null]
+            "type": "string",
+            "enum": ["Deferred", "Released"],
+            "description": "The status of the transaction"
           },
           "description": {
-            "description": "Describes the reasons for the transaction",
-            "type": ["string"]
+            "type": ["null", "string"],
+            "description": "Describes the reasons for the transaction"
           },
           "postedDate": {
-            "description": "The date and time when the transaction was posted",
-            "type": ["string"],
-            "format": "date-time"
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the transaction was posted"
           },
           "totalAmount": {
+            "type": "object",
             "description": "The total amount of money in the transaction",
-            "type": ["object"],
             "properties": {
               "currencyCode": {
-                "description": "The three-digit currency code in ISO 4217 format",
-                "type": ["string"]
+                "type": "string",
+                "description": "The three-digit currency code in ISO 4217 format"
               },
               "currencyAmount": {
-                "description": "The monetary value",
-                "type": ["number"]
+                "type": "number",
+                "description": "The monetary value"
               }
-            },
-            "required": ["currencyCode", "currencyAmount"]
-          },
-          "marketplaceDetails": {
-            "description": "Information about the marketplace where the transaction occurred",
-            "type": ["object"],
-            "properties": {
-              "marketplaceId": {
-                "description": "The identifier of the marketplace where the transaction occurred",
-                "type": ["string"]
-              },
-              "marketplaceName": {
-                "description": "The name of the marketplace where the transaction occurred",
-                "type": ["string"]
-              }
-            },
-            "required": ["marketplaceId", "marketplaceName"]
-          },
-          "items": {
-            "description": "Additional information about the items in the transaction",
-            "type": ["array"],
-            "items": {
-              "type": ["object"],
-              "properties": {
-                "description": {
-                  "description": "A description of the items in a transaction",
-                  "type": ["string"]
-                },
-                "relatedIdentifiers": {
-                  "description": "Related business identifiers of the item",
-                  "type": ["array"],
-                  "items": {
-                    "type": ["object"],
-                    "properties": {
-                      "itemRelatedIdentifierName": {
-                        "description": "Enumerated set of related item identifier names for the item",
-                        "type": ["string"],
-                        "enum": [
-                          "ORDER_ADJUSTMENT_ITEM_ID",
-                          "COUPON_ID",
-                          "REMOVAL_SHIPMENT_ITEM_ID",
-                          "TRANSACTION_ID"
-                        ]
-                      },
-                      "itemRelatedIdentifierValue": {
-                        "description": "Corresponding value to ItemRelatedIdentifierName",
-                        "type": ["string"]
-                      }
-                    },
-                    "required": ["itemRelatedIdentifierName", "itemRelatedIdentifierValue"]
-                  }
-                },
-                "totalAmount": {
-                  "description": "The total monetary amount of the item",
-                  "type": ["object"],
-                  "properties": {
-                    "currencyCode": {
-                      "type": ["string"]
-                    },
-                    "currencyAmount": {
-                      "type": ["number"]
-                    }
-                  },
-                  "required": ["currencyCode", "currencyAmount"]
-                },
-                "breakdowns": {
-                  "$ref": "#/definitions/breakdowns"
-                },
-                "contexts": {
-                  "$ref": "#/definitions/contexts"
-                }
-              },
-              "required": ["description", "totalAmount"]
             }
           },
-          "contexts": {
-            "$ref": "#/definitions/contexts"
+          "items": {
+            "type": "array",
+            "description": "List of items in the transaction",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": ["null", "string"],
+                  "description": "Description of the items"
+                },
+                "totalAmount": {
+                  "type": "object",
+                  "properties": {
+                    "currencyCode": {
+                      "type": "string"
+                    },
+                    "currencyAmount": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "contexts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "contextType": {
+                        "type": "string"
+                      },
+                      "asin": {
+                        "type": ["null", "string"]
+                      },
+                      "sku": {
+                        "type": ["null", "string"]
+                      },
+                      "quantityShipped": {
+                        "type": ["null", "integer"]
+                      },
+                      "fulfillmentNetwork": {
+                        "type": ["null", "string"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
-          "breakdowns": {
-            "$ref": "#/definitions/breakdowns"
+          "marketplaceDetails": {
+            "type": "object",
+            "properties": {
+              "marketplaceId": {
+                "type": "string",
+                "description": "The identifier of the marketplace where the transaction occurred"
+              },
+              "marketplaceName": {
+                "type": "string",
+                "description": "The name of the marketplace where the transaction occurred"
+              }
+            }
           }
         },
-        "required": ["sellingPartnerMetadata", "transactionType", "transactionId", "totalAmount", "postedDate", "marketplaceDetails"]
+        "required": ["transactionType", "postedDate", "totalAmount"]
       }
     }
   },
-  "required": ["transactions"],
-  "definitions": {
-    "breakdowns": {
-      "description": "A list of breakdowns that provide details on how the total amount is calculated",
-      "type": ["array"],
-      "items": {
-        "type": ["object"],
-        "properties": {
-          "breakdownType": {
-            "type": ["string"],
-            "enum": [
-              "Tax", "ProductCharges", "Shipping", "AmazonFees", "OurPriceTax", "ShippingTax",
-              "OurPricePrincipal", "ShippingPrincipal", "FBAPerUnitFulfillmentFee", "Commission",
-              "ShippingChargeback", "Sales", "Expenses", "Base"
-            ]
-          },
-          "breakdownAmount": {
-            "type": ["object"],
-            "properties": {
-              "currencyCode": {
-                "type": ["string"]
-              },
-              "currencyAmount": {
-                "type": ["number"]
-              }
-            },
-            "required": ["currencyCode", "currencyAmount"]
-          },
-          "breakdowns": {
-            "$ref": "#/definitions/breakdowns"
-          }
-        },
-        "required": ["breakdownType", "breakdownAmount"]
-      }
-    },
-    "contexts": {
-      "description": "Additional Information about the item or transaction",
-      "type": ["null", "array"],
-      "items": {
-        "type": ["object"],
-        "oneOf": [
-          {
-            "properties": {
-              "contextType": {
-                "const": "ProductContext"
-              },
-              "asin": {
-                "type": ["string"]
-              },
-              "sku": {
-                "type": ["string"]
-              },
-              "quantityShipped": {
-                "type": ["integer"],
-                "minimum": 0
-              },
-              "fulfillmentNetwork": {
-                "type": ["string"]
-              }
-            },
-            "required": ["contextType", "asin", "sku", "quantityShipped", "fulfillmentNetwork"]
-          },
-          {
-            "properties": {
-              "contextType": {
-                "const": "AmazonPayContext"
-              },
-              "storeName": {
-                "type": ["string"]
-              },
-              "orderType": {
-                "type": ["string"]
-              },
-              "channel": {
-                "type": ["string"]
-              }
-            },
-            "required": ["contextType", "storeName", "orderType", "channel"]
-          },
-          {
-            "properties": {
-              "contextType": {
-                "const": "PaymentsContext"
-              },
-              "paymentType": {
-                "type": ["string"]
-              },
-              "paymentMethod": {
-                "type": ["string"]
-              },
-              "paymentReference": {
-                "type": ["string"]
-              },
-              "paymentDate": {
-                "type": ["string"],
-                "format": "date-time"
-              }
-            },
-            "required": ["contextType", "paymentType", "paymentMethod", "paymentReference", "paymentDate"]
-          },
-          {
-            "properties": {
-              "contextType": {
-                "const": "DeferredContext"
-              },
-              "deferralReason": {
-                "type": ["string"]
-              },
-              "maturityDate": {
-                "type": ["string"],
-                "format": "date-time"
-              },
-              "deferralStatus": {
-                "type": ["string"]
-              }
-            },
-            "required": ["contextType", "deferralReason", "maturityDate", "deferralStatus"]
-          },
-          {
-            "properties": {
-              "contextType": {
-                "const": "TimeRangeContext"
-              },
-              "startTime": {
-                "type": ["string"],
-                "format": "date-time"
-              },
-              "endTime": {
-                "type": ["string"],
-                "format": "date-time"
-              }
-            },
-            "required": ["contextType", "startTime", "endTime"]
-          }
-        ]
-      }
-    }
-  }
+  "required": ["transactions"]
 }
