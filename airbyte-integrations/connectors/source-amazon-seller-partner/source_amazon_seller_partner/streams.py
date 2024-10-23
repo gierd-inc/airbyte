@@ -1531,7 +1531,6 @@ class ListTransactions(FinanceStream):
     replication_end_date_field = "postedBefore"
     cursor_field = "postedBefore"
     data_field = "payload"
-    primary_key = "transactionId"
 
     def path(self, **kwargs) -> str:
         return f"finances/{FINANCES_API_VERSION}/transactions"
@@ -1549,11 +1548,6 @@ class ListTransactions(FinanceStream):
         if stream_slice and "marketplaceId" in stream_slice:
             params["marketplaceId"] = stream_slice["marketplaceId"]
 
-        # Add nextToken for pagination if available
-        if next_page_token:
-            params["nextToken"] = next_page_token["nextToken"]
-
-        return params
 
     def parse_response(
         self,
