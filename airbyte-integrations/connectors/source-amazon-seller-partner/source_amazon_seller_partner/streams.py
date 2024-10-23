@@ -1554,12 +1554,16 @@ class ListTransactions(FinanceStream):
         response: requests.Response,
         stream_state: Mapping[str, Any] = None,
         stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
     ) -> Iterable[Mapping]:
         data = response.json().get(self.data_field, {})
         transactions = data.get("transactions", [])
+        params = self.request_params(stream_state)
         for transaction in transactions:
-            yield transaction
+            yield {
+                **transaction,
+                self.replication_end_date_field: params.get(self.replication_end_date_field)
+            }
+
 
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
