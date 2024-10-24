@@ -1531,6 +1531,7 @@ class ListTransactions(FinanceStream):
     replication_end_date_field = "postedBefore"
     cursor_field = "postedBefore"
     data_field = "payload"
+    primary_key= "transactionID"
 
     def path(self, **kwargs) -> str:
         return f"finances/{FINANCES_API_VERSION}/transactions"
@@ -1563,7 +1564,6 @@ class ListTransactions(FinanceStream):
                 **transaction,
                 self.replication_end_date_field: params.get(self.replication_end_date_field)
             }
-
 
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
