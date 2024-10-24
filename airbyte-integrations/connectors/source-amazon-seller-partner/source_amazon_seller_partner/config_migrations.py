@@ -14,7 +14,6 @@ from .source import SourceAmazonSellerPartner
 
 logger = logging.getLogger("airbyte_logger")
 
-
 class Migration:
     message_repository: MessageRepository = InMemoryMessageRepository()
 
