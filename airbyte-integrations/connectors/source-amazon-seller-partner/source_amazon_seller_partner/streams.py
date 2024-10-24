@@ -1531,7 +1531,7 @@ class ListTransactions(FinanceStream):
     replication_end_date_field = "postedBefore"
     cursor_field = "postedBefore"
     data_field = "payload"
-    primary_key= "transactionID"
+    primary_key = "transactionID"
 
     def path(self, **kwargs) -> str:
         return f"finances/{FINANCES_API_VERSION}/transactions"
@@ -1539,22 +1539,23 @@ class ListTransactions(FinanceStream):
     def request_params(
         self,
         stream_state: Mapping[str, Any],
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
+        next_page_token: Mapping[str, Any] = None,
+        **kwargs
     ) -> MutableMapping[str, Any]:
-        params = super().request_params(stream_state, stream_slice, next_page_token)
-
+        params = super().request_params(stream_state, next_page_token=next_page_token)
         
-       # Add marketplaceId if provided in stream_slice
-        if stream_slice and "marketplaceId" in stream_slice:
-            params["marketplaceId"] = stream_slice["marketplaceId"]
-
+        # Add marketplaceId if provided in stream_slice
+        if "stream_slice" in kwargs and kwargs["stream_slice"] and "marketplaceId" in kwargs["stream_slice"]:
+            params["marketplaceId"] = kwargs["stream_slice"]["marketplaceId"]
+            
+        return params
 
     def parse_response(
         self,
         response: requests.Response,
         stream_state: Mapping[str, Any] = None,
         stream_slice: Mapping[str, Any] = None,
+        **kwargs: Any
     ) -> Iterable[Mapping]:
         data = response.json().get(self.data_field, {})
         transactions = data.get("transactions", [])
