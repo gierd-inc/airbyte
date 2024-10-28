@@ -1557,6 +1557,9 @@ class ListTransactions(FinanceStream):
                 f"Adjusted start date to be 2 minutes before current time: {self._replication_start_date}"
             )
 
+    def path(self, **kwargs) -> str:
+        return f"finances/{FINACES_TRANSACTION_API_VERSION}/transactions"
+
     def request_params(
         self,
         stream_state: Mapping[str, Any],
