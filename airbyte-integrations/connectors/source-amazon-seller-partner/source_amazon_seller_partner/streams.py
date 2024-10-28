@@ -1524,17 +1524,38 @@ class ListFinancialEvents(FinanceStream):
 class ListTransactions(FinanceStream):
     """
     API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#listransactions
+    
+    postedAfter (required): Financial events posted after (or on) this date.
+    Must be in ISO 8601 format and more than 2 minutes before request time.
     """
-
+    
     name = "ListTransactions"
-    replication_start_date_field = "postedAfter"
-    replication_end_date_field = "postedBefore"
     cursor_field = "postedBefore"
-    data_field = "payload"
     primary_key = "transactionID"
 
-    def path(self, **kwargs) -> str:
-        return f"finances/{FINANCES_API_VERSION}/transactions"
+    @property
+    def replication_start_date_field(self) -> str:
+        return "postedAfter"
+
+    @property
+    def replication_end_date_field(self) -> str:
+        return "postedBefore"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self._replication_start_date:
+            # Default to 90 days ago if no start date is provided
+            self._replication_start_date = pendulum.now("utc").subtract(days=90).strftime(DATE_TIME_FORMAT)
+            logger.info(f"Using default start date: {self._replication_start_date}")
+        
+        # Validate start date is more than 2 minutes in the past
+        start_date = pendulum.parse(self._replication_start_date)
+        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
+        if start_date > two_mins_ago:
+            self._replication_start_date = two_mins_ago.strftime(DATE_TIME_FORMAT)
+            logger.warning(
+                f"Adjusted start date to be 2 minutes before current time: {self._replication_start_date}"
+            )
 
     def request_params(
         self,
@@ -1542,12 +1563,28 @@ class ListTransactions(FinanceStream):
         next_page_token: Mapping[str, Any] = None,
         **kwargs
     ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            return dict(next_page_token)
+
         params = super().request_params(stream_state, next_page_token=next_page_token)
+        
+        # Double-check postedAfter is present and valid
+        if not params.get(self.replication_start_date_field):
+            raise ValueError("postedAfter date is required but not set")
+            
+        # Ensure the start date is more than 2 minutes in the past
+        start_date = pendulum.parse(params[self.replication_start_date_field])
+        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
+        if start_date > two_mins_ago:
+            params[self.replication_start_date_field] = two_mins_ago.strftime(DATE_TIME_FORMAT)
+            logger.warning(
+                f"Adjusted postedAfter to be 2 minutes before current time: {params[self.replication_start_date_field]}"
+            )
         
         # Add marketplaceId if provided in stream_slice
         if "stream_slice" in kwargs and kwargs["stream_slice"] and "marketplaceId" in kwargs["stream_slice"]:
             params["marketplaceId"] = kwargs["stream_slice"]["marketplaceId"]
-            
+        
         return params
 
     def parse_response(
@@ -1557,14 +1594,23 @@ class ListTransactions(FinanceStream):
         stream_slice: Mapping[str, Any] = None,
         **kwargs: Any
     ) -> Iterable[Mapping]:
-        data = response.json().get(self.data_field, {})
-        transactions = data.get("transactions", [])
-        params = self.request_params(stream_state)
-        for transaction in transactions:
-            yield {
-                **transaction,
-                self.replication_end_date_field: params.get(self.replication_end_date_field)
-            }
+        try:
+            transactions = response.json().get("transactions", [])
+
+            if not transactions:
+                logger.warning(f"Empty transactions received: {response.content}")
+                return
+            
+            params = self.request_params(stream_state)
+            for transaction in transactions:
+                yield {
+                    **transaction,
+                    self.replication_end_date_field: params.get(self.replication_end_date_field)
+                }
+        except Exception as e:
+            logger.error(f"Error parsing response: {str(e)}")
+            logger.error(f"Response content: {response.content}")
+            raise
 
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
