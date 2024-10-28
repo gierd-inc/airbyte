@@ -1532,6 +1532,7 @@ class ListTransactions(FinanceStream):
     name = "ListTransactions"
     cursor_field = "postedBefore"
     primary_key = "transactionID"
+    MAX_TIME_RANGE_DAYS = 180
 
     @property
     def replication_start_date_field(self) -> str:
@@ -1560,6 +1561,24 @@ class ListTransactions(FinanceStream):
     def path(self, **kwargs) -> str:
         return f"finances/{FINACES_TRANSACTION_API_VERSION}/transactions"
 
+    def validate_date_range(self, posted_after: str, posted_before: str) -> None:
+        """Validate the date range meets API requirements."""
+        after_date = pendulum.parse(posted_after)
+        before_date = pendulum.parse(posted_before)
+        
+        # Validate postedBefore is later than postedAfter
+        if before_date <= after_date:
+            raise ValueError("postedBefore must be later than postedAfter")
+        
+        # Check if date range exceeds 180 days
+        if (before_date - after_date).days > self.MAX_TIME_RANGE_DAYS:
+            raise ValueError(f"Date range cannot exceed {self.MAX_TIME_RANGE_DAYS} days")
+        
+        # Ensure both dates are more than 2 minutes in the past
+        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
+        if after_date > two_mins_ago or before_date > two_mins_ago:
+            raise ValueError("Both postedAfter and postedBefore must be more than 2 minutes in the past")
+
     def request_params(
         self,
         stream_state: Mapping[str, Any],
@@ -1568,21 +1587,26 @@ class ListTransactions(FinanceStream):
     ) -> MutableMapping[str, Any]:
         if next_page_token:
             return dict(next_page_token)
-
+        
         params = super().request_params(stream_state, next_page_token=next_page_token)
         
         # Double-check postedAfter is present and valid
         if not params.get(self.replication_start_date_field):
             raise ValueError("postedAfter date is required but not set")
-            
-        # Ensure the start date is more than 2 minutes in the past
-        start_date = pendulum.parse(params[self.replication_start_date_field])
-        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
-        if start_date > two_mins_ago:
-            params[self.replication_start_date_field] = two_mins_ago.strftime(DATE_TIME_FORMAT)
-            logger.warning(
-                f"Adjusted postedAfter to be 2 minutes before current time: {params[self.replication_start_date_field]}"
-            )
+        
+        # If postedBefore is provided, validate the date range
+        if params.get(self.replication_end_date_field):
+            try:
+                self.validate_date_range(
+                    params[self.replication_start_date_field],
+                    params[self.replication_end_date_field]
+                )
+            except ValueError as e:
+                logger.error(f"Date range validation failed: {str(e)}")
+                raise
+        else:
+            # Default postedBefore to 2 minutes ago if not provided
+            params[self.replication_end_date_field] = pendulum.now("utc").subtract(minutes=2).strftime(DATE_TIME_FORMAT)
         
         # Add marketplaceId if provided in stream_slice
         if "stream_slice" in kwargs and kwargs["stream_slice"] and "marketplaceId" in kwargs["stream_slice"]:
@@ -1599,7 +1623,7 @@ class ListTransactions(FinanceStream):
     ) -> Iterable[Mapping]:
         try:
             transactions = response.json().get("transactions", [])
-
+            
             if not transactions:
                 logger.warning(f"Empty transactions received: {response.content}")
                 return
