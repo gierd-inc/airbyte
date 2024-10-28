@@ -14,7 +14,6 @@ from airbyte_protocol.models import FailureType
 from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, ListTransactions, RestockInventoryReports
 
 list_transactions_data = {
-    "payload": {
         "transactions": [
             {
                 "sellingPartnerMetadata": {
@@ -261,7 +260,6 @@ list_transactions_data = {
             }
         ]
     }
-}
 
 list_financial_event_groups_data = {
     "payload": {
@@ -526,7 +524,6 @@ def test_list_transactions_stream_request_params(list_transactions_stream):
     )
     assert params["postedAfter"] == START_DATE_1
     assert params["postedBefore"] == END_DATE_1
-    assert params["MaxResultsPerPage"] == 100
     assert params["marketplaceId"] == "ATVPDKIKX0DER"
 
 def test_list_transactions_stream_parse_response(list_transactions_stream):

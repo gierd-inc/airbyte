@@ -1526,7 +1526,7 @@ class ListTransactions(FinanceStream):
     API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#listransactions
     
     postedAfter (required): Financial events posted after (or on) this date.
-    Must be in ISO 8601 format and more than 2 minutes before request time.
+    Must be in ISO 8601 format and more than 2 minutes before request time. 
     """
     
     name = "ListTransactions"
