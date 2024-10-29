@@ -1563,14 +1563,13 @@ class TransactionStream(IncrementalAmazonSPStream, ABC):
 
         params = {
             self.replication_start_date_field: start_date,
-            self.replication_end_date_field: end_date,
-            self.page_size_field: self.page_size,
+            self.replication_end_date_field: end_date
         }
         return params
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         stream_data = response.json()
-        next_page_token = stream_data.get("transactions").get(self.next_page_token_field)
+        next_page_token = stream_data.get("ListTransactionsResponse").get(self.next_page_token_field)
         if next_page_token:
             return {self.next_page_token_field: next_page_token}
 
@@ -1592,6 +1591,7 @@ class ListTransactions(TransactionStream):
     name = "ListTransactions"
     cursor_field = "postedBefore"
     MAX_TIME_RANGE_DAYS = 180
+    data_field = "ListTransactionsResponse"
 
     @property
     def replication_start_date_field(self) -> str:
@@ -1680,18 +1680,12 @@ class ListTransactions(TransactionStream):
         **kwargs: Any
     ) -> Iterable[Mapping]:
         try:
-            transactions = response.json().get("transactions", [])
-            
-            if not transactions:
-                logger.warning(f"Empty transactions received: {response.content}")
-                return
-            
+            transactions = response.json().get(self.data_field, {}).get("transactions", {})
+
             params = self.request_params(stream_state)
             for transaction in transactions:
-                yield {
-                    **transaction,
-                    self.replication_end_date_field: params.get(self.replication_end_date_field)
-                }
+                transaction[self.replication_end_date_field] = params.get(self.replication_end_date_field)
+                yield transaction
         except Exception as e:
             logger.error(f"Error parsing response: {str(e)}")
             logger.error(f"Response content: {response.content}")
