@@ -1093,8 +1093,8 @@ TABLE "ListTransactions" {
      "description" string
      "postedDate" string
      "totalAmount" object
-      "marketplaceDetails" string
-       "items" array
-       "contexts" array
-       "breakdowns" object
+     "marketplaceDetails" string
+    "items" array
+    "contexts" array
+     "breakdowns" object
 }

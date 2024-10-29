@@ -1680,7 +1680,7 @@ class ListTransactions(TransactionStream):
         **kwargs: Any
     ) -> Iterable[Mapping]:
         try:
-            transactions = response.json().get(self.data_field, {}).get("transactions", {})
+            transactions = response.json().get(self.data_field, {}).get("transactions", [])
 
             params = self.request_params(stream_state)
             for transaction in transactions:
