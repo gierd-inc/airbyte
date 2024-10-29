@@ -35,7 +35,7 @@ ORDERS_API_VERSION = "v0"
 VENDORS_API_VERSION = "v1"
 FINANCES_API_VERSION = "v0"
 VENDOR_ORDERS_API_VERSION = "v1"
-FINACES_TRANSACTION_API_VERSION = "v2024-06-19"
+FINACES_TRANSACTION_API_VERSION = "2024-06-19"
 
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 DATE_FORMAT = "%Y-%m-%d"
@@ -1469,6 +1469,7 @@ class FinanceStream(IncrementalAmazonSPStream, ABC):
             return self.default_backoff_time
 
 
+
 class ListFinancialEventGroups(FinanceStream):
     """
     API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#get-financesv0financialeventgroups
@@ -1520,8 +1521,67 @@ class ListFinancialEvents(FinanceStream):
         events[self.replication_end_date_field] = params.get(self.replication_end_date_field)
         yield from [events]
 
+class TransactionStream(IncrementalAmazonSPStream, ABC):
+    next_page_token_field = "NextToken"
+    default_backoff_time = 60
+    primary_key = "transactionID"
+    page_size_field = "MaxResultsPerPage"
+    page_size = 100
 
-class ListTransactions(FinanceStream):
+    @property
+    @abstractmethod
+    def replication_start_date_field(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def replication_end_date_field(self) -> str:
+        pass
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], next_page_token: Mapping[str, Any] = None, **kwargs
+    ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            return dict(next_page_token)
+
+        # for finance APIs, end date-time must be no later than two minutes before the request was submitted
+        end_date = pendulum.now("utc").subtract(minutes=5).strftime(DATE_TIME_FORMAT)
+        if self._replication_end_date:
+            end_date = self._replication_end_date
+
+        # start date and end date should not be more than 180 days apart.
+        start_date = max(pendulum.parse(self._replication_start_date), pendulum.parse(end_date).subtract(days=180)).strftime(
+            DATE_TIME_FORMAT
+        )
+
+        stream_state = stream_state or {}
+        if stream_state_value := stream_state.get(self.cursor_field):
+            start_date = max(stream_state_value, start_date)
+
+        # logging to make sure user knows taken start date
+        logger.info("start date used: %s", start_date)
+
+        params = {
+            self.replication_start_date_field: start_date,
+            self.replication_end_date_field: end_date,
+            self.page_size_field: self.page_size,
+        }
+        return params
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        stream_data = response.json()
+        next_page_token = stream_data.get("transactions").get(self.next_page_token_field)
+        if next_page_token:
+            return {self.next_page_token_field: next_page_token}
+
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        rate_limit = response.headers.get("x-amzn-RateLimit-Limit", 0)
+        if rate_limit:
+            return 1 / float(rate_limit)
+        else:
+            return self.default_backoff_time
+
+class ListTransactions(TransactionStream):
     """
     API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#listransactions
     
@@ -1531,7 +1591,6 @@ class ListTransactions(FinanceStream):
     
     name = "ListTransactions"
     cursor_field = "postedBefore"
-    primary_key = "transactionID"
     MAX_TIME_RANGE_DAYS = 180
 
     @property
@@ -1610,8 +1669,7 @@ class ListTransactions(FinanceStream):
         
         # Add marketplaceId if provided in stream_slice
         if "stream_slice" in kwargs and kwargs["stream_slice"] and "marketplaceId" in kwargs["stream_slice"]:
-            params["marketplaceId"] = kwargs["stream_slice"]["marketplaceId"]
-        
+            params["marketplaceId"] = kwargs["stream_slice"]["marketplaceId"]        
         return params
 
     def parse_response(
