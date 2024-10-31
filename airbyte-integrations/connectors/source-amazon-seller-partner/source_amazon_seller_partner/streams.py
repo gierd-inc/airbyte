@@ -1589,7 +1589,7 @@ class ListTransactions(TransactionStream):
     """
     
     name = "ListTransactions"
-    cursor_field = "postedBefore"
+    cursor_field = "postedDate"
     MAX_TIME_RANGE_DAYS = 180
     data_field = "ListTransactionsResponse"
 
