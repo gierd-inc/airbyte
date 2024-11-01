@@ -1695,6 +1695,7 @@ class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
     report_name = "GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA"
 
 
+
 class FlatFileSettlementV2Reports(IncrementalReportsAmazonSPStream):
     report_name = "GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE"
     transformer: TypeTransformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization | TransformConfig.CustomSchemaNormalization)

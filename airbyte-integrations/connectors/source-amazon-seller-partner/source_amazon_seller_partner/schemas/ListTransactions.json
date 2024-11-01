@@ -3,6 +3,8 @@
   "type": ["null","object"],
   "description": "A list of transactions within the specified time period",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "items":  { 
+    "type": "object",
       "properties": {
              "sellingPartnerMetadata": {
                "description": "Metadata that describes the seller.",
@@ -569,4 +571,4 @@
     "description": "Details about the movement of money in the financial transaction. Breakdowns are further categorized into breakdown types, breakdown amounts, and further breakdowns."
   }
 }
-   }
+   }}
