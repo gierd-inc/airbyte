@@ -7,7 +7,6 @@
         "type": ["null","object"],
         "description": "A list of transactions within the specified time period",
         "$schema": "http://json-schema.org/draft-07/schema#",
- 
                  "properties": {
                    "sellingPartnerMetadata": {
                      "description": "Metadata that describes the seller.",

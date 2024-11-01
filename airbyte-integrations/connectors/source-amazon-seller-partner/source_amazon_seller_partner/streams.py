@@ -1522,7 +1522,7 @@ class ListFinancialEvents(FinanceStream):
         yield from [events]
 
 class TransactionStream(IncrementalAmazonSPStream, ABC):
-    next_page_token_field = "NextToken"
+    next_page_token_field = "nextToken"
     default_backoff_time = 60
     primary_key = "transactionID"
     page_size_field = "MaxResultsPerPage"
@@ -1691,9 +1691,8 @@ class ListTransactions(TransactionStream):
             logger.error(f"Response content: {response.content}")
             raise
 
-
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
-    report_name = "GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA"
+    report_name = "GET_FBA _FULFILLMENT_CUSTOMER_RETURNS_DATA"
 
 
 class FlatFileSettlementV2Reports(IncrementalReportsAmazonSPStream):
