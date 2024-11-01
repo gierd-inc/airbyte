@@ -1692,7 +1692,7 @@ class ListTransactions(TransactionStream):
             raise
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
-    report_name = "GET_FBA _FULFILLMENT_CUSTOMER_RETURNS_DATA"
+    report_name = "GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA"
 
 
 class FlatFileSettlementV2Reports(IncrementalReportsAmazonSPStream):
