@@ -1083,3 +1083,18 @@ Ref {
 Ref {
     "OrderItems"."AmazonOrderId" <> "Orders"."AmazonOrderId"
 }
+
+TABLE "ListTransactions" {
+    "sellingPartnerMetadata" object
+    "relatedIdentifiers" array
+    "transactionType" string
+    "transactionId" string
+     "transactionStatus" string
+     "description" string
+     "postedDate" string
+     "totalAmount" object
+     "marketplaceDetails" string
+    "items" array
+    "contexts" array
+     "breakdowns" object
+}

@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
+
 import csv
 import gzip
 import json
@@ -34,6 +35,7 @@ ORDERS_API_VERSION = "v0"
 VENDORS_API_VERSION = "v1"
 FINANCES_API_VERSION = "v0"
 VENDOR_ORDERS_API_VERSION = "v1"
+FINACES_TRANSACTION_API_VERSION = "2024-06-19"
 
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 DATE_FORMAT = "%Y-%m-%d"
@@ -1467,6 +1469,7 @@ class FinanceStream(IncrementalAmazonSPStream, ABC):
             return self.default_backoff_time
 
 
+
 class ListFinancialEventGroups(FinanceStream):
     """
     API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#get-financesv0financialeventgroups
@@ -1518,9 +1521,179 @@ class ListFinancialEvents(FinanceStream):
         events[self.replication_end_date_field] = params.get(self.replication_end_date_field)
         yield from [events]
 
+class TransactionStream(IncrementalAmazonSPStream, ABC):
+    next_page_token_field = "nextToken"
+    default_backoff_time = 60
+    primary_key = "transactionID"
+    page_size_field = "MaxResultsPerPage"
+    page_size = 100
+
+    @property
+    @abstractmethod
+    def replication_start_date_field(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def replication_end_date_field(self) -> str:
+        pass
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], next_page_token: Mapping[str, Any] = None, **kwargs
+    ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            return dict(next_page_token)
+
+        # for finance APIs, end date-time must be no later than two minutes before the request was submitted
+        end_date = pendulum.now("utc").subtract(minutes=5).strftime(DATE_TIME_FORMAT)
+        if self._replication_end_date:
+            end_date = self._replication_end_date
+
+        # start date and end date should not be more than 180 days apart.
+        start_date = max(pendulum.parse(self._replication_start_date), pendulum.parse(end_date).subtract(days=180)).strftime(
+            DATE_TIME_FORMAT
+        )
+
+        stream_state = stream_state or {}
+        if stream_state_value := stream_state.get(self.cursor_field):
+            start_date = max(stream_state_value, start_date)
+
+        # logging to make sure user knows taken start date
+        logger.info("start date used: %s", start_date)
+
+        params = {
+            self.replication_start_date_field: start_date,
+            self.replication_end_date_field: end_date
+        }
+        return params
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        stream_data = response.json()
+        next_page_token = stream_data.get("ListTransactionsResponse").get(self.next_page_token_field)
+        if next_page_token:
+            return {self.next_page_token_field: next_page_token}
+
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        rate_limit = response.headers.get("x-amzn-RateLimit-Limit", 0)
+        if rate_limit:
+            return 1 / float(rate_limit)
+        else:
+            return self.default_backoff_time
+
+class ListTransactions(TransactionStream):
+    """
+    API docs: https://developer-docs.amazon.com/sp-api/docs/finances-api-reference#listransactions
+    
+    postedAfter (required): Financial events posted after (or on) this date.
+    Must be in ISO 8601 format and more than 2 minutes before request time. 
+    """
+    
+    name = "ListTransactions"
+    cursor_field = "postedDate"
+    MAX_TIME_RANGE_DAYS = 180
+    data_field = "ListTransactionsResponse"
+
+    @property
+    def replication_start_date_field(self) -> str:
+        return "postedAfter"
+
+    @property
+    def replication_end_date_field(self) -> str:
+        return "postedBefore"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self._replication_start_date:
+            # Default to 90 days ago if no start date is provided
+            self._replication_start_date = pendulum.now("utc").subtract(days=90).strftime(DATE_TIME_FORMAT)
+            logger.info(f"Using default start date: {self._replication_start_date}")
+        
+        # Validate start date is more than 2 minutes in the past
+        start_date = pendulum.parse(self._replication_start_date)
+        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
+        if start_date > two_mins_ago:
+            self._replication_start_date = two_mins_ago.strftime(DATE_TIME_FORMAT)
+            logger.warning(
+                f"Adjusted start date to be 2 minutes before current time: {self._replication_start_date}"
+            )
+
+    def path(self, **kwargs) -> str:
+        return f"finances/{FINACES_TRANSACTION_API_VERSION}/transactions"
+
+    def validate_date_range(self, posted_after: str, posted_before: str) -> None:
+        """Validate the date range meets API requirements."""
+        after_date = pendulum.parse(posted_after)
+        before_date = pendulum.parse(posted_before)
+        
+        # Validate postedBefore is later than postedAfter
+        if before_date <= after_date:
+            raise ValueError("postedBefore must be later than postedAfter")
+        
+        # Check if date range exceeds 180 days
+        if (before_date - after_date).days > self.MAX_TIME_RANGE_DAYS:
+            raise ValueError(f"Date range cannot exceed {self.MAX_TIME_RANGE_DAYS} days")
+        
+        # Ensure both dates are more than 2 minutes in the past
+        two_mins_ago = pendulum.now("utc").subtract(minutes=2)
+        if after_date > two_mins_ago or before_date > two_mins_ago:
+            raise ValueError("Both postedAfter and postedBefore must be more than 2 minutes in the past")
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        next_page_token: Mapping[str, Any] = None,
+        **kwargs
+    ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            return dict(next_page_token)
+        
+        params = super().request_params(stream_state, next_page_token=next_page_token)
+        
+        # Double-check postedAfter is present and valid
+        if not params.get(self.replication_start_date_field):
+            raise ValueError("postedAfter date is required but not set")
+        
+        # If postedBefore is provided, validate the date range
+        if params.get(self.replication_end_date_field):
+            try:
+                self.validate_date_range(
+                    params[self.replication_start_date_field],
+                    params[self.replication_end_date_field]
+                )
+            except ValueError as e:
+                logger.error(f"Date range validation failed: {str(e)}")
+                raise
+        else:
+            # Default postedBefore to 2 minutes ago if not provided
+            params[self.replication_end_date_field] = pendulum.now("utc").subtract(minutes=2).strftime(DATE_TIME_FORMAT)
+        
+        # Add marketplaceId if provided in stream_slice
+        if "stream_slice" in kwargs and kwargs["stream_slice"] and "marketplaceId" in kwargs["stream_slice"]:
+            params["marketplaceId"] = kwargs["stream_slice"]["marketplaceId"]        
+        return params
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs: Any
+    ) -> Iterable[Mapping]:
+        try:
+            transactions = response.json().get(self.data_field, {}).get("transactions", [])
+
+            params = self.request_params(stream_state)
+            for transaction in transactions:
+                transaction[self.replication_end_date_field] = params.get(self.replication_end_date_field)
+                yield transaction
+        except Exception as e:
+            logger.error(f"Error parsing response: {str(e)}")
+            logger.error(f"Response content: {response.content}")
+            raise
 
 class FbaCustomerReturnsReports(IncrementalReportsAmazonSPStream):
     report_name = "GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA"
+
 
 
 class FlatFileSettlementV2Reports(IncrementalReportsAmazonSPStream):

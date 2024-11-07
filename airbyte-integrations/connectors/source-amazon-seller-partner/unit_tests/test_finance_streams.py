@@ -11,7 +11,255 @@ import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.utils import AirbyteTracedException
 from airbyte_protocol.models import FailureType
-from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, RestockInventoryReports
+from source_amazon_seller_partner.streams import ListFinancialEventGroups, ListFinancialEvents, ListTransactions, RestockInventoryReports
+
+list_transactions_data = {
+        "transactions": [
+            {
+                "sellingPartnerMetadata": {
+                    "sellingPartnerId": "A1WSDY9MTKXUGZ",
+                    "marketplaceId": "AT614YYYNOC1S",
+                    "accountType": "Standard Orders"
+                },
+                "transactionType": "Shipment",
+                "transactionId": "lo6cQ55-40s5sU4g_lSwkZV22qz-vCNVtjLLqAQyux4",
+                "transactionStatus": None,
+                "relatedIdentifiers": [
+                    {
+                        "relatedIdentifierName": "ORDER_ID",
+                        "relatedIdentifierValue": "931-0852306-5138236"
+                    },
+                    {
+                        "relatedIdentifierName": "SHIPMENT_ID",
+                        "relatedIdentifierValue": "14178712390725"
+                    },
+                    {
+                        "relatedIdentifierName": "FINANCIAL_EVENT_GROUP_ID",
+                        "relatedIdentifierValue": "_fSsCZmGkBME7DCFtbqKLcDX-KB-M-5Pdr1NaefqCks"
+                    }
+                ],
+                "totalAmount": {
+                    "currencyAmount": 294.46,
+                    "currencyCode": "SEK"
+                },
+                "description": "Order Payment",
+                "postedDate": "2024-01-18T12:45:47Z",
+                "marketplaceDetails": {
+                    "marketplaceId": "AT614YYYNOC1S",
+                    "marketplaceName": "Amazon.se"
+                },
+                "items": [
+                    {
+                        "description": "SAMSUNG Galaxy Tab S6 Lite WiFi - 64GB, 4GB, Grigio",
+                        "totalAmount": {
+                            "currencyAmount": 294.46,
+                            "currencyCode": "SEK"
+                        },
+                        "relatedIdentifiers": [
+                            {
+                                "itemRelatedIdentifierName": "ORDER_ADJUSTMENT_ITEM_ID",
+                                "itemRelatedIdentifierValue": "6226957701205"
+                            }
+                        ],
+                        "breakdowns": [
+                            {
+                                "breakdownType": "Tax",
+                                "breakdownAmount": {
+                                    "currencyAmount": 89.8,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": [
+                                    {
+                                        "breakdownType": "OurPriceTax",
+                                        "breakdownAmount": {
+                                            "currencyAmount": 80,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": []
+                                    },
+                                    {
+                                        "breakdownType": "ShippingTax",
+                                        "breakdownAmount": {
+                                            "currencyAmount": 9.8,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": []
+                                    }
+                                ]
+                            },
+                            {
+                                "breakdownType": "ProductCharges",
+                                "breakdownAmount": {
+                                    "currencyAmount": 320,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": [
+                                    {
+                                        "breakdownType": "OurPricePrincipal",
+                                        "breakdownAmount": {
+                                            "currencyAmount": 320,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": []
+                                    }
+                                ]
+                            },
+                            {
+                                "breakdownType": "Shipping",
+                                "breakdownAmount": {
+                                    "currencyAmount": 39.2,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": [
+                                    {
+                                        "breakdownType": "ShippingPrincipal",
+                                        "breakdownAmount": {
+                                            "currencyAmount": 39.2,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": []
+                                    }
+                                ]
+                            },
+                            {
+                                "breakdownType": "AmazonFees",
+                                "breakdownAmount": {
+                                    "currencyAmount": -154.54,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": [
+                                    {
+                                        "breakdownType": "FBAPerUnitFulfillmentFee",
+                                        "breakdownAmount": {
+                                            "currencyAmount": -45.54,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": [
+                                            {
+                                                "breakdownType": "Base",
+                                                "breakdownAmount": {
+                                                    "currencyAmount": -36.43,
+                                                    "currencyCode": "SEK"
+                                                }
+                                            },
+                                            {
+                                                "breakdownType": "Tax",
+                                                "breakdownAmount": {
+                                                    "currencyAmount": -9.11,
+                                                    "currencyCode": "SEK"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "breakdownType": "Commission",
+                                        "breakdownAmount": {
+                                            "currencyAmount": -60,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": [
+                                            {
+                                                "breakdownType": "Base",
+                                                "breakdownAmount": {
+                                                    "currencyAmount": -60,
+                                                    "currencyCode": "SEK"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "breakdownType": "ShippingChargeback",
+                                        "breakdownAmount": {
+                                            "currencyAmount": -49,
+                                            "currencyCode": "SEK"
+                                        },
+                                        "breakdowns": [
+                                            {
+                                                "breakdownType": "Base",
+                                                "breakdownAmount": {
+                                                    "currencyAmount": -39.2,
+                                                    "currencyCode": "SEK"
+                                                }
+                                            },
+                                            {
+                                                "breakdownType": "Tax",
+                                                "breakdownAmount": {
+                                                    "currencyAmount": -9.8,
+                                                    "currencyCode": "SEK"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "contexts": [
+                            {
+                                "asin": "B085V6LQPB",
+                                "quantityShipped": 1,
+                                "sku": "PSMM-TEST-SKU-Aug-29_08_03_14-0898",
+                                "fulfillmentNetwork": "AFN",
+                                "contextType": "ProductContext"
+                            }
+                        ]
+                    }
+                ],
+                "breakdowns": [
+                    {
+                        "breakdownType": "Sales",
+                        "breakdownAmount": {
+                            "currencyAmount": 449,
+                            "currencyCode": "SEK"
+                        },
+                        "breakdowns": [
+                            {
+                                "breakdownType": "Tax",
+                                "breakdownAmount": {
+                                    "currencyAmount": 89.8,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": None
+                            },
+                            {
+                                "breakdownType": "ProductCharges",
+                                "breakdownAmount": {
+                                    "currencyAmount": 320,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": None
+                            },
+                            {
+                                "breakdownType": "Shipping",
+                                "breakdownAmount": {
+                                    "currencyAmount": 39.2,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": None
+                            }
+                        ]
+                    },
+                    {
+                        "breakdownType": "Expenses",
+                        "breakdownAmount": {
+                            "currencyAmount": -154.54,
+                            "currencyCode": "SEK"
+                        },
+                        "breakdowns": [
+                            {
+                                "breakdownType": "AmazonFees",
+                                "breakdownAmount": {
+                                    "currencyAmount": -154.54,
+                                    "currencyCode": "SEK"
+                                },
+                                "breakdowns": None
+                            }
+                        ]
+                    }
+                ],
+                "contexts": None
+            }
+        ]
+    }
 
 list_financial_event_groups_data = {
     "payload": {
@@ -247,3 +495,66 @@ def test_financial_events_stream_backoff_time(list_financial_events_stream, resp
     response_mock = mock.MagicMock()
     response_mock.headers = response_headers
     assert stream.backoff_time(response_mock) == expected_backoff_time
+
+
+@pytest.fixture
+def list_transactions_stream():
+    def _internal(start_date: str = START_DATE_1, end_date: str = END_DATE_1):
+        stream = ListTransactions(
+            url_base="https://test.url",
+            replication_start_date=start_date,
+            replication_end_date=end_date,
+            marketplace_id="id",
+            authenticator=None,
+            period_in_days=0,
+            report_options=None,
+        )
+        return stream
+    return _internal
+
+def test_list_transactions_stream_path(list_transactions_stream):
+    stream = list_transactions_stream()
+    assert stream.path() == "finances/v2024-06-19/transactions"
+
+def test_list_transactions_stream_request_params(list_transactions_stream):
+    stream = list_transactions_stream()
+    params = stream.request_params(
+        stream_state={},
+        stream_slice={"marketplaceId": "ATVPDKIKX0DER"}
+    )
+    assert params["postedAfter"] == START_DATE_1
+    assert params["postedBefore"] == END_DATE_1
+    assert params["marketplaceId"] == "ATVPDKIKX0DER"
+
+def test_list_transactions_stream_parse_response(list_transactions_stream):
+    stream = list_transactions_stream()
+    response = requests.Response()
+    response.json = mock.Mock(return_value=list_transactions_data)
+    
+    parsed_records = list(stream.parse_response(response))
+    assert len(parsed_records) == 1
+    assert parsed_records[0]["transactionId"] == "lo6cQ55-40s5sU4g_lSwkZV22qz-vCNVtjLLqAQyux4"
+    assert parsed_records[0]["transactionType"] == "Shipment"
+    assert parsed_records[0]["totalAmount"]["currencyAmount"] == 294.46
+    assert parsed_records[0]["totalAmount"]["currencyCode"] == "SEK"
+    assert parsed_records[0]["marketplaceDetails"]["marketplaceName"] == "Amazon.se"
+
+def test_list_transactions_stream_backoff_time(list_transactions_stream):
+    stream = list_transactions_stream()
+    response = requests.Response()
+    response.headers = {"x-amzn-RateLimit-Limit": "1.0"}
+    assert stream.backoff_time(response) == 1.0
+
+    response.headers = {}
+    assert stream.backoff_time(response) == 60
+
+def test_list_transactions_stream_next_page_token(list_transactions_stream):
+    stream = list_transactions_stream()
+    response = requests.Response()
+    response.json = mock.Mock(return_value={
+        "payload": {"NextToken": "next_token_value"}
+    })
+    assert stream.next_page_token(response) == {"NextToken": "next_token_value"}
+
+    response.json = mock.Mock(return_value={"payload": {}})
+    assert stream.next_page_token(response) is None

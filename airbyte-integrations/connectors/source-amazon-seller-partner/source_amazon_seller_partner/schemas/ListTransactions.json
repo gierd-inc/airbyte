@@ -1,0 +1,574 @@
+{
+  "title": "ListTransactions",
+  "type": ["null","object"],
+  "description": "A list of transactions within the specified time period",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "items":  { 
+    "type": "object",
+      "properties": {
+             "sellingPartnerMetadata": {
+               "description": "Metadata that describes the seller.",
+               "type": "object",
+               "properties": {
+                 "sellingPartnerId": {
+                   "type": "string",
+                   "description": "A unique seller identifier."
+                 },
+                 "accountType": {
+                   "type": "string",
+                   "description": "The type of account in the transaction."
+                 },
+                 "marketplaceId": {
+                   "type": "string",
+                   "description": "The identifier of the marketplace where the transaction occurred."
+                 }
+               }
+             },
+             "relatedIdentifiers": {
+               "description": "Identifiers related to the transaction, such as order and shipment IDs.",
+               "type": "array",
+               "items": {
+                "type": "object",
+                "properties": {
+                  "relatedIdentifierName": {
+                    "type": "string",
+                    "description": "An enumerated set of related business identifier names.",
+                    "enum": [
+                      "ORDER_ID",
+                      "SHIPMENT_ID",
+                      "EVENT_GROUP_ID",
+                      "REFUND_ID",
+                      "INVOICE_ID",
+                      "DISBURSEMENT_ID",
+                      "TRANSFER_ID",
+                      "DEFERRED_TRANSACTION_ID"
+                    ],
+                    "x-docgen-enum-table-extension": [
+                      {
+                        "value": "ORDER_ID",
+                        "description": "The `OrderId` that is associated with the transaction."
+                      },
+                      {
+                        "value": "SHIPMENT_ID",
+                        "description": "The `ShipmentId` that is associated with the transaction."
+                      },
+                      {
+                        "value": "EVENT_GROUP_ID",
+                        "description": "The identifier that is associated with the transaction's financial event group."
+                      },
+                      {
+                        "value": "REFUND_ID",
+                        "description": "The `RefundId` that is associated with the transaction."
+                      },
+                      {
+                        "value": "INVOICE_ID",
+                        "description": "The `InvoiceId` that is associated with the transaction."
+                      },
+                      {
+                        "value": "DISBURSEMENT_ID",
+                        "description": "The disbursement ID for Amazon's bank transfer."
+                      },
+                      {
+                        "value": "TRANSFER_ID",
+                        "description": "The `TransferId` associated with the transaction."
+                      },
+                      {
+                        "value": "DEFERRED_TRANSACTION_ID",
+                        "description": "The transaction ID for the related deferred transaction"
+                      }
+                    ]
+                  },
+                  "relatedIdentifierValue": {
+                    "type": "string",
+                    "description": "Corresponding value of `RelatedIdentifierName`."
+                  }
+                }
+               }
+             },
+             "transactionType": {
+               "type": "string",
+               "description": "The type of transaction.\n\n**Possible value:** `Shipment`"
+             },
+             "transactionId": {
+               "type": "string",
+               "description": "The unique identifier of the transaction."
+             },
+             "transactionStatus": {
+               "type": "string",
+               "description": "The status of the transaction. \n\n**Possible values:**\n\n* `Deferred`\n* `Released`"
+             },
+             "description": {
+               "type": "string",
+               "description": "Describes the reasons for the transaction.\n\n**Example:** 'Order Payment', 'Refund Order'"
+             },
+             "postedDate": {
+              "description": "The date and time when the transaction was posted.",
+              "type": "string",
+              "format": "date-time"
+             },
+             "totalAmount": {
+               "description": "The total amount of money in the transaction.",
+               "type": "object",
+                "properties": {
+                  "CurrencyCode": {
+                    "type": "string",
+                    "description": "The three-digit currency code in ISO 4217 format."
+                  },
+                  "CurrencyAmount": {
+                    "type": "number",
+                    "description": "A signed decimal number."
+                  }
+                }
+             },
+             "marketplaceDetails": {
+               "description": "Information about the marketplace where the transaction occurred.",
+               "type": "object",
+                  "properties": {
+                    "marketplaceId": {
+                      "type": "string",
+                      "description": "The identifier of the marketplace where the transaction occured."
+                    },
+                    "marketplaceName": {
+                      "type": "string",
+                      "description": "The name of the marketplace where the transaction occurred. For example: `Amazon.com`,`Amazon.in`"
+                    }
+                  }
+             },
+             "items": {
+               "description": "Additional information about the items in the transaction.",
+               "type": "array",
+               "items": {
+                "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string",
+                      "description": "A description of the items in a transaction."
+                    },
+                    "relatedIdentifiers": {
+                      "description": "Identifiers related to the transaction, such as order and shipment IDs.",
+                      "type": "array",
+                      "items": {
+                       "type": "object",
+                       "properties": {
+                         "relatedIdentifierName": {
+                           "type": "string",
+                           "description": "An enumerated set of related business identifier names.",
+                           "enum": [
+                             "ORDER_ID",
+                             "SHIPMENT_ID",
+                             "EVENT_GROUP_ID",
+                             "REFUND_ID",
+                             "INVOICE_ID",
+                             "DISBURSEMENT_ID",
+                             "TRANSFER_ID",
+                             "DEFERRED_TRANSACTION_ID"
+                           ],
+                           "x-docgen-enum-table-extension": [
+                             {
+                               "value": "ORDER_ID",
+                               "description": "The `OrderId` that is associated with the transaction."
+                             },
+                             {
+                               "value": "SHIPMENT_ID",
+                               "description": "The `ShipmentId` that is associated with the transaction."
+                             },
+                             {
+                               "value": "EVENT_GROUP_ID",
+                               "description": "The identifier that is associated with the transaction's financial event group."
+                             },
+                             {
+                               "value": "REFUND_ID",
+                               "description": "The `RefundId` that is associated with the transaction."
+                             },
+                             {
+                               "value": "INVOICE_ID",
+                               "description": "The `InvoiceId` that is associated with the transaction."
+                             },
+                             {
+                               "value": "DISBURSEMENT_ID",
+                               "description": "The disbursement ID for Amazon's bank transfer."
+                             },
+                             {
+                               "value": "TRANSFER_ID",
+                               "description": "The `TransferId` associated with the transaction."
+                             },
+                             {
+                               "value": "DEFERRED_TRANSACTION_ID",
+                               "description": "The transaction ID for the related deferred transaction"
+                             }
+                           ]
+                         },
+                         "relatedIdentifierValue": {
+                           "type": "string",
+                           "description": "Corresponding value of `RelatedIdentifierName`."
+                         }
+                       }
+                      }
+                    },
+                    "totalAmount": {
+                      "description": "The total amount of money in the transaction.",
+                      "type": "object",
+                       "properties": {
+                         "CurrencyCode": {
+                           "type": "string",
+                           "description": "The three-digit currency code in ISO 4217 format."
+                         },
+                         "CurrencyAmount": {
+                           "type": "number",
+                           "description": "A signed decimal number."
+                         }
+                       }
+                    },
+                    "breakdowns": {
+  "description": "A list of breakdowns that provide details on how the total amount is calculated for the transaction.",
+  "type": ["array", "null"],
+  "items": {
+    "type": "object",
+    "properties": {
+      "breakdownType": {
+        "type": "string",
+        "description": "The type of charge."
+      },
+      "breakdownAmount": {
+        "description": "The monetary amount of the charge.",
+        "type": "object",
+        "properties": {
+          "CurrencyCode": {
+            "type": "string",
+            "description": "The three-digit currency code in ISO 4217 format."
+          },
+          "CurrencyAmount": {
+            "type": "number",
+            "description": "A signed decimal number."
+          }
+        }
+      },
+      "breakdowns": {
+        "description": "Further breakdowns of `BreakdownType`.",
+        "type": ["array", "null"],
+        "items": {
+          "type": "object",
+          "properties": {
+            "breakdownType": {
+              "type": "string",
+              "description": "The type of charge."
+            },
+            "breakdownAmount": {
+              "description": "The monetary amount of the charge.",
+              "type": "object",
+              "properties": {
+                "CurrencyCode": {
+                  "type": "string",
+                  "description": "The three-digit currency code in ISO 4217 format."
+                },
+                "CurrencyAmount": {
+                  "type": "number",
+                  "description": "A signed decimal number."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "description": "Details about the movement of money in the financial transaction. Breakdowns are further categorized into breakdown types, breakdown amounts, and further breakdowns."
+  }
+},
+                    "contexts": {
+                      "type": "array",
+                      "description": "A list of additional information about the item.",
+                      "items": {
+                        "description": "Additional Information about the item.",
+                          "allOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "contextType"
+                              ],
+                              "properties": {
+                                "contextType": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "description": "Amazon Pay Context",
+                              "properties": {
+                                "storeName": {
+                                  "type": "string",
+                                  "description": "The name of the store that is related to the transaction."
+                                },
+                                "orderType": {
+                                  "type": "string",
+                                  "description": "The transaction's order type."
+                                },
+                                "channel": {
+                                  "type": "string",
+                                  "description": "Channel details of related transaction."
+                                }
+                              }
+                            },
+                            {
+                              "description": "Additional information related to the product.",
+                                "type": "object",
+                                "properties": {
+                                  "asin": {
+                                    "type": "string",
+                                    "description": "The Amazon Standard Identification Number (ASIN) of the item."
+                                  },
+                                  "sku": {
+                                    "type": "string",
+                                    "description": "The Stock Keeping Unit (SKU) of the item."
+                                  },
+                                  "quantityShipped": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "The quantity of the item shipped."
+                                  },
+                                  "fulfillmentNetwork": {
+                                    "type": "string",
+                                    "description": "The fulfillment network of the item."
+                                  }
+                                }
+                            },
+                            {
+                              "description": "Additional information related to payments-related transactions.",
+                                  "type": "object",
+                                  "properties": {
+                                    "paymentType": {
+                                      "type": "string",
+                                      "description": "The type of payment."
+                                    },
+                                    "paymentMethod": {
+                                      "type": "string",
+                                      "description": "The method of payment."
+                                    },
+                                    "paymentReference": {
+                                      "type": "string",
+                                      "description": "The reference number of the payment."
+                                    },
+                                    "paymentDate": {
+                                       "type": "string",
+              "format": "date-time",
+                                      "description": "The date of the payment."
+                                    }
+                                  }
+                            },
+                            {
+                              "description": "Additional information related to deferred transactions.",
+                                "type": "object",
+                                "properties": {
+                                  "deferralReason": {
+                                    "type": "string",
+                                    "description": "Deferral policy applied on the transaction.\n\n**Examples:** `B2B`,`DD7`"
+                                  },
+                                  "maturityDate": {
+                                     "type": "string",
+              "format": "date-time",
+                                    "description": "The release date of the transaction."
+                                  },
+                                  "deferralStatus": {
+                                    "type": "string",
+                                    "description": "The status of the transaction. For example, `HOLD`,`RELEASE`."
+                                  }
+                                }
+                            },
+                            {
+                              "description": "Additional information that is related to the time range of the transaction.",
+                              "type": "object",
+                              "properties": {
+                                "startTime": {
+                                  "type": "string",
+                                    "format": "date-time",
+                                  "description": "The start time of the transaction."
+                                },
+                                "endTime": {
+                                   "type": "string",
+                                    "format": "date-time",
+                                  "description": "The end time of the transaction."
+                                }
+                              }
+                            }
+                          ]
+                      }
+                     }
+                   }   
+              }
+             },
+             "contexts": {
+              "type": "array",
+              "description": "A list of additional information about the item.",
+              "items": {
+                "description": "Additional Information about the item.",
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "contextType"
+                      ],
+                      "properties": {
+                        "contextType": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "Amazon Pay Context",
+                      "properties": {
+                        "storeName": {
+                          "type": "string",
+                          "description": "The name of the store that is related to the transaction."
+                        },
+                        "orderType": {
+                          "type": "string",
+                          "description": "The transaction's order type."
+                        },
+                        "channel": {
+                          "type": "string",
+                          "description": "Channel details of related transaction."
+                        }
+                      }
+                    },
+                    {
+                      "description": "Additional information related to the product.",
+                        "type": "object",
+                        "properties": {
+                          "asin": {
+                            "type": "string",
+                            "description": "The Amazon Standard Identification Number (ASIN) of the item."
+                          },
+                          "sku": {
+                            "type": "string",
+                            "description": "The Stock Keeping Unit (SKU) of the item."
+                          },
+                          "quantityShipped": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "The quantity of the item shipped."
+                          },
+                          "fulfillmentNetwork": {
+                            "type": "string",
+                            "description": "The fulfillment network of the item."
+                          }
+                        }
+                    },
+                    {
+                      "description": "Additional information related to payments-related transactions.",
+                          "type": "object",
+                          "properties": {
+                            "paymentType": {
+                              "type": "string",
+                              "description": "The type of payment."
+                            },
+                            "paymentMethod": {
+                              "type": "string",
+                              "description": "The method of payment."
+                            },
+                            "paymentReference": {
+                              "type": "string",
+                              "description": "The reference number of the payment."
+                            },
+                            "paymentDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "The date of the payment."
+                            }
+                          }
+                    },
+                    {
+                      "description": "Additional information related to deferred transactions.",
+                        "type": "object",
+                        "properties": {
+                          "deferralReason": {
+                            "type": "string",
+                            "description": "Deferral policy applied on the transaction.\n\n**Examples:** `B2B`,`DD7`"
+                          },
+                          "maturityDate": {
+                             "type": "string",
+              "format": "date-time",
+                            "description": "The release date of the transaction."
+                          },
+                          "deferralStatus": {
+                            "type": "string",
+                            "description": "The status of the transaction. For example, `HOLD`,`RELEASE`."
+                          }
+                        }
+                    },
+                    {
+                      "description": "Additional information that is related to the time range of the transaction.",
+                      "type": "object",
+                      "properties": {
+                        "startTime": {
+                           "type": "string",
+              "format": "date-time",
+                          "description": "The start time of the transaction."
+                        },
+                        "endTime": {
+                           "type": "string",
+              "format": "date-time",
+                          "description": "The end time of the transaction."
+                        }
+                      }
+                    }
+                  ]
+              }
+             }
+           },
+          "breakdowns": {
+  "description": "A list of breakdowns that provide details on how the total amount is calculated for the transaction.",
+  "type": ["array", "null"],
+  "items": {
+    "type": "object",
+    "properties": {
+      "breakdownType": {
+        "type": "string",
+        "description": "The type of charge."
+      },
+      "breakdownAmount": {
+        "description": "The monetary amount of the charge.",
+        "type": "object",
+        "properties": {
+          "CurrencyCode": {
+            "type": "string",
+            "description": "The three-digit currency code in ISO 4217 format."
+          },
+          "CurrencyAmount": {
+            "type": "number",
+            "description": "A signed decimal number."
+          }
+        }
+      },
+      "breakdowns": {
+        "description": "Further breakdowns of `BreakdownType`.",
+        "type": ["array", "null"],
+        "items": {
+          "type": "object",
+          "properties": {
+            "breakdownType": {
+              "type": "string",
+              "description": "The type of charge."
+            },
+            "breakdownAmount": {
+              "description": "The monetary amount of the charge.",
+              "type": "object",
+              "properties": {
+                "CurrencyCode": {
+                  "type": "string",
+                  "description": "The three-digit currency code in ISO 4217 format."
+                },
+                "CurrencyAmount": {
+                  "type": "number",
+                  "description": "A signed decimal number."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "description": "Details about the movement of money in the financial transaction. Breakdowns are further categorized into breakdown types, breakdown amounts, and further breakdowns."
+  }
+}
+   }}
